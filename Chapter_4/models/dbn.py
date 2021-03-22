@@ -1,4 +1,5 @@
 import tensorflow as tf
+
 from . import rbm as rbm
 
 
@@ -37,20 +38,20 @@ class DBN(tf.keras.Model):
             x = dense_layer(x)
         return x
 
-    def train_rbm(self, rbm, inputs,
-                  num_epochs, tolerance, batch_size, shuffle_buffer):
+    def train_rbm(self, rbm, inputs):
 
         last_cost = None
 
-        for epoch in range(num_epochs):
+        for epoch in range(self._num_epochs):
             cost = 0.0
             count = 0.0
-            for datapoints in inputs.shuffle(shuffle_buffer).batch(batch_size):
+            for datapoints in inputs.shuffle(self._shuffle_buffer).batch(
+                self._batch_size):
                 cost += rbm.cd_update(datapoints)
                 count += 1.0
             cost /= count
             print("epoch: {}, cost: {}".format(epoch, cost))
-            if last_cost and abs(last_cost-cost) <= tolerance:
+            if last_cost and abs(last_cost-cost) <= self._tolerance:
                 break
             last_cost = cost
 
@@ -59,6 +60,7 @@ class DBN(tf.keras.Model):
     def train_dbn(self, inputs):
 
         # pretraining:
+        
         inputs_layers = []
         for num in range(len(self._rbm_layers)):
 
@@ -66,21 +68,13 @@ class DBN(tf.keras.Model):
                 inputs_layers.append(inputs)
                 self._rbm_layers[num] = \
                     self.train_rbm(self._rbm_layers[num],
-                                   inputs,
-                                   num_epochs=self._num_epochs,
-                                   tolerance=self._tolerance,
-                                   batch_size=self._batch_size,
-                                   shuffle_buffer=self._shuffle_buffer)
+                                   inputs)
             else:  # pass all data through previous layer
                 inputs_layers.append(inputs_layers[num-1].map(
                     self._rbm_layers[num-1].forward))
                 self._rbm_layers[num] = \
                     self.train_rbm(self._rbm_layers[num],
-                                   inputs_layers[num],
-                                   num_epochs=self._num_epochs,
-                                   tolerance=self._tolerance,
-                                   batch_size=self._batch_size,
-                                   shuffle_buffer=self._shuffle_buffer)
+                                   inputs_layers[num])
 
         # wake-sleep:
 

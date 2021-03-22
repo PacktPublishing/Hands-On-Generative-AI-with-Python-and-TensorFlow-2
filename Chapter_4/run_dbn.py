@@ -6,7 +6,6 @@ from models import dbn, rbm
 import matplotlib.pyplot as plt
 import numpy as np
 import tensorflow.compat.v2 as tf
-
 import tensorflow_datasets as tfds
 
 
@@ -42,7 +41,7 @@ def run_dbn():
     deep_belief_network.train_dbn(mnist_train.map(
             lambda x: flatten_image(x, label=False)))
 
-    # backpropr
+    # backprop
 
     deep_belief_network.compile(loss=tf.keras.losses.CategoricalCrossentropy())
     deep_belief_network.fit(
